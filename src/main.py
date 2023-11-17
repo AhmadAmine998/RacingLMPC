@@ -25,13 +25,13 @@ sys.path.append('fnc/simulator')
 sys.path.append('fnc/controller')
 sys.path.append('fnc')
 import matplotlib.pyplot as plt
-from plot import plotTrajectory, plotClosedLoopLMPC, animation_xy, animation_states, saveGif_xyResults
+from fnc.plot import plotTrajectory, plotClosedLoopLMPC, animation_xy, animation_states, saveGif_xyResults
 from initControllerParameters import initMPCParams, initLMPCParams
-from PredictiveControllers import MPC, LMPC, MPCParams
-from PredictiveModel import PredictiveModel
-from Utilities import Regression, PID
-from SysModel import Simulator
-from Track import Map
+from fnc.controller.PredictiveControllers import MPC, LMPC, MPCParams
+from fnc.controller.PredictiveModel import PredictiveModel
+from fnc.Utilities import Regression, PID
+from fnc.simulator.SysModel import Simulator
+from fnc.simulator.Track import Map
 import numpy as np
 import pickle
 import pdb

@@ -499,16 +499,18 @@ class LMPC(MPC):
         Sel_Qfun = self.Qfun[it][indexSSandQfun]
 
         # Modify the cost if the predicion has crossed the finisch line
-        if self.xPred == []:
-            Sel_Qfun = self.Qfun[it][indexSSandQfun]
-        elif (np.all((self.xPred[:, 4] > self.predictiveModel.map.TrackLength) == False)):
-            Sel_Qfun = self.Qfun[it][indexSSandQfun]
-        elif it < self.it - 1:
-            Sel_Qfun = self.Qfun[it][indexSSandQfun] + self.Qfun[it][0]
-        else:
-            sPred = self.xPred[:, 4]
-            predCurrLap = self.N - sum(sPred > self.predictiveModel.map.TrackLength)
-            currLapTime = self.timeStep
-            Sel_Qfun = self.Qfun[it][indexSSandQfun] + currLapTime + predCurrLap
+        try:
+            if self.xPred == []:
+                Sel_Qfun = self.Qfun[it][indexSSandQfun]
+        except:
+            if (np.all((self.xPred[:, 4] > self.predictiveModel.map.TrackLength) == False)):
+                Sel_Qfun = self.Qfun[it][indexSSandQfun]
+            elif it < self.it - 1:
+                Sel_Qfun = self.Qfun[it][indexSSandQfun] + self.Qfun[it][0]
+            else:
+                sPred = self.xPred[:, 4]
+                predCurrLap = self.N - sum(sPred > self.predictiveModel.map.TrackLength)
+                currLapTime = self.timeStep
+                Sel_Qfun = self.Qfun[it][indexSSandQfun] + currLapTime + predCurrLap
 
         return SS_Points, SSu_Points, Sel_Qfun

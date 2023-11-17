@@ -1,5 +1,5 @@
 import numpy as np
-from PredictiveControllers import MPC, LMPC, MPCParams
+from fnc.controller.PredictiveControllers import MPC, LMPC, MPCParams
 
 def initMPCParams(n, d, N, vt):
     # Buil the matrices for the state constraint in each region. In the region i we want Fx[i]x <= bx[b]
@@ -43,7 +43,7 @@ def initLMPCParams(map, N):
     numSS_it = 4                  # Number of trajectories used at each iteration to build the safe set
     numSS_Points = 12*numSS_it    # Number of points to select from each trajectory to build the safe set
 
-    Laps       = 40+numSS_it      # Total LMPC laps
+    Laps       = 1+numSS_it      # Total LMPC laps
     TimeLMPC   = 400              # Simulation time
 
     # Tuning Parameters

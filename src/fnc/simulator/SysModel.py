@@ -1,7 +1,8 @@
 import numpy as np
 import pdb
 import datetime
-from Utilities import wrap
+from fnc.Utilities import wrap
+from fnc.simulator.Track import Map
 
 class Simulator():
     """Vehicle simulator
@@ -14,7 +15,7 @@ class Simulator():
         lap: number of laps to run. If set to 0 then the simulation is completed when ClosedLoopData is full
         flagLMPC: set to 0 for standart controller. Set to 1 for LMPC --> at iteration j add data to SS^{j-1} (look line 9999)
         """
-        self.map = map
+        self.map : Map = map
         self.multiLap = multiLap
         self.flagLMPC = flagLMPC
         self.dt = dt
