@@ -494,21 +494,21 @@ class LMPC(MPC):
         else:
             indexSSandQfun = range(MinNorm, MinNorm + int(numPoints))
 
-        SS_Points  = x[indexSSandQfun, :].T
-        SSu_Points = u[indexSSandQfun, :].T
-        Sel_Qfun = self.Qfun[it][indexSSandQfun]
+        SS_Points  = x.take(indexSSandQfun, axis=0, mode='wrap').T
+        SSu_Points = u.take(indexSSandQfun, axis=0, mode='wrap').T
+        Sel_Qfun = self.Qfun[it].take(indexSSandQfun, axis=0, mode='wrap')
 
         # Modify the cost if the predicion has crossed the finisch line
-        if self.xPred == []:
-            Sel_Qfun = self.Qfun[it][indexSSandQfun]
+        if list(self.xPred) == []:
+            Sel_Qfun = self.Qfun[it].take(indexSSandQfun, axis=0, mode='wrap')
         elif (np.all((self.xPred[:, 4] > self.predictiveModel.map.TrackLength) == False)):
-            Sel_Qfun = self.Qfun[it][indexSSandQfun]
+            Sel_Qfun = self.Qfun[it].take(indexSSandQfun, axis=0, mode='wrap')
         elif it < self.it - 1:
-            Sel_Qfun = self.Qfun[it][indexSSandQfun] + self.Qfun[it][0]
+            Sel_Qfun = self.Qfun[it].take(indexSSandQfun, axis=0, mode='wrap') + self.Qfun[it][0]
         else:
             sPred = self.xPred[:, 4]
             predCurrLap = self.N - sum(sPred > self.predictiveModel.map.TrackLength)
             currLapTime = self.timeStep
-            Sel_Qfun = self.Qfun[it][indexSSandQfun] + currLapTime + predCurrLap
+            Sel_Qfun = self.Qfun[it].take(indexSSandQfun, axis=0, mode='wrap') + currLapTime + predCurrLap
 
         return SS_Points, SSu_Points, Sel_Qfun

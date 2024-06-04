@@ -125,12 +125,16 @@ def animation_xy(map, lmpc, it):
     plt.plot(Points1[:, 0], Points1[:, 1], '-b')
     plt.plot(Points2[:, 0], Points2[:, 1], '-b')
     plt.plot(SS_glob[it][0:LapTime[it], 4], SS_glob[it][0:LapTime[it], 5], '-ok', label="Closed-loop trajectory",zorder=-1)
+    plt.xlim((-60, 30))
+    plt.ylim((-10, 70))
 
     ax = plt.axes()
     SSpoints_x = []; SSpoints_y = []
     xPred = []; yPred = []
     SSpoints, = ax.plot(SSpoints_x, SSpoints_y, 'sb', label="SS",zorder=0)
     line, = ax.plot(xPred, yPred, '-or', label="Predicted Trajectory",zorder=1)
+    ax.set_xlim((-60, 30))
+    ax.set_ylim((-10, 70))
 
     v = np.array([[ 1.,  1.],
                   [ 1., -1.],
@@ -158,7 +162,10 @@ def animation_xy(map, lmpc, it):
                 x = SS_glob[it][i, 4]
                 y = SS_glob[it][i, 5]
                 psi = SS_glob[it][i, 3]
-                l = 0.4; w = 0.2
+                # vehicle length [m]
+                l = 4.298
+                # vehicle width [m]
+                w = 1.674
                 car_x = [ x + l * np.cos(psi) - w * np.sin(psi), x + l*np.cos(psi) + w * np.sin(psi),
                           x - l * np.cos(psi) + w * np.sin(psi), x - l * np.cos(psi) - w * np.sin(psi)]
                 car_y = [ y + l * np.sin(psi) + w * np.cos(psi), y + l * np.sin(psi) - w * np.cos(psi),
@@ -174,7 +181,7 @@ def animation_xy(map, lmpc, it):
         plt.draw()
         plt.pause(1e-17)
 
-def animation_states(map, LMPCOpenLoopData, lmpc, it):
+def animation_states(map, lmpc, it):
     SS_glob = lmpc.SS_glob
     LapTime = lmpc.LapTime
     SS = lmpc.SS
@@ -270,10 +277,6 @@ def animation_states(map, LMPCOpenLoopData, lmpc, it):
             xPred[j, 0], yPred[j, 0] = map.getGlobalPosition(lmpc.xStoredPredTraj[it][i][j, 4],
                                                              lmpc.xStoredPredTraj[it][i][j, 5])
 
-        for j in range(0, numSS_Points):
-            SSpoints_x[j, 0], SSpoints_y[j, 0] = map.getGlobalPosition(LMPCOpenLoopData.SSused[4, j, i, it],
-                                                                       LMPCOpenLoopData.SSused[5, j, i, it])
-
         line_tr.set_data(xPred, yPred)
 
 
@@ -288,7 +291,7 @@ def animation_states(map, LMPCOpenLoopData, lmpc, it):
         plt.draw()
         plt.pause(1e-17)
 
-def saveGif_xyResults(map, LMPCOpenLoopData, lmpc, it):
+def saveGif_xyResults(map, lmpc, it):
     SS_glob = lmpc.SS_glob
     LapTime = lmpc.LapTime
     SS = lmpc.SS
@@ -351,9 +354,6 @@ def saveGif_xyResults(map, LMPCOpenLoopData, lmpc, it):
                 car_y = [y + l * np.sin(psi) + w * np.cos(psi), y + l * np.sin(psi) - w * np.cos(psi),
                          y - l * np.sin(psi) - w * np.cos(psi), y - l * np.sin(psi) + w * np.cos(psi)]
 
-        for j in range(0, numSS_Points):
-            SSpoints_x[j, 0], SSpoints_y[j, 0] = map.getGlobalPosition(LMPCOpenLoopData.SSused[4, j, i, it],
-                                                                       LMPCOpenLoopData.SSused[5, j, i, it])
         SSpoints.set_data(SSpoints_x, SSpoints_y)
 
         line.set_data(xPred, yPred)

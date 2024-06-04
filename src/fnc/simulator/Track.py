@@ -1,6 +1,7 @@
 import numpy as np
 import numpy.linalg as la
 import pdb
+import matplotlib.pyplot as plt
 
 class Map():
     """map object
@@ -28,9 +29,9 @@ class Map():
         #                  [80 * 0.03, -80 * 0.03 * 2 / np.pi]])
 
         # L-shaped track
-        self.halfWidth = 0.4
+        self.halfWidth = halfWidth
         self.slack = 0.45
-        lengthCurve = 4.5
+        lengthCurve = 45
         spec = np.array([[1.0, 0],
                          [lengthCurve, lengthCurve / np.pi],
                          # Note s = 1 * np.pi / 2 and r = -1 ---> Angle spanned = np.pi / 2
@@ -38,6 +39,24 @@ class Map():
                          [lengthCurve, lengthCurve / np.pi],
                          [lengthCurve / np.pi * 2, 0],
                          [lengthCurve / 2, lengthCurve / np.pi]])
+
+        # spec = np.array([[1.0, 0],
+        #                  [lengthCurve, lengthCurve / np.pi],
+        #                  [1.0, 0],
+        #                  # Note s = 1 * np.pi / 2 and r = -1 ---> Angle spanned = np.pi / 2
+        #                  [lengthCurve / np.pi * 2, 0],
+        #                  [lengthCurve / 2, lengthCurve / np.pi],
+        #                  [lengthCurve / 2, lengthCurve / np.pi]])
+        
+        # spec = np.array([[1.0, 0],
+        #                  [lengthCurve, lengthCurve / np.pi],
+        #                  # Note s = 1 * np.pi / 2 and r = -1 ---> Angle spanned = np.pi / 2
+        #                  [lengthCurve, -lengthCurve / np.pi],
+        #                  [lengthCurve, lengthCurve / np.pi],
+        #                  [lengthCurve / np.pi * 2, 0],
+        #                  [lengthCurve / 2, lengthCurve / np.pi],
+        #                  [57.5 , 0],
+        #                  [lengthCurve / 2, lengthCurve / np.pi],])
 
 
         # spec = np.array([[1.0, 0],
@@ -132,6 +151,23 @@ class Map():
         self.PointAndTangent = PointAndTangent
         self.TrackLength = PointAndTangent[-1, 3] + PointAndTangent[-1, 4]
 
+        # Points = int(np.floor(10 * (self.PointAndTangent[-1, 3] + self.PointAndTangent[-1, 4])))
+        # Points1 = np.zeros((Points, 2))
+        # Points2 = np.zeros((Points, 2))
+        # Points0 = np.zeros((Points, 2))
+        # for i in range(0, int(Points)):
+        #     Points1[i, :] = self.getGlobalPosition(i * 0.1, self.halfWidth)
+        #     Points2[i, :] = self.getGlobalPosition(i * 0.1, -self.halfWidth)
+        #     Points0[i, :] = self.getGlobalPosition(i * 0.1, 0)
+
+        # plt.figure()
+        # plt.plot(self.PointAndTangent[:, 0], self.PointAndTangent[:, 1], 'o')
+        # plt.plot(Points0[:, 0], Points0[:, 1], '--')
+        # plt.plot(Points1[:, 0], Points1[:, 1], '-b')
+        # plt.plot(Points2[:, 0], Points2[:, 1], '-b')
+        # plt.show()
+
+
     def getGlobalPosition(self, s, ey):
         """coordinate transformation from curvilinear reference frame (e, ey) to inertial reference frame (X, Y)
         (s, ey): position in the curvilinear reference frame
@@ -140,6 +176,9 @@ class Map():
         # wrap s along the track
         while (s > self.TrackLength):
             s = s - self.TrackLength
+
+        if np.linalg.norm(s) < 1e-6:
+            s = 0
 
         # Compute the segment in which system is evolving
         PointAndTangent = self.PointAndTangent

@@ -16,8 +16,8 @@ class PredictiveModel():
         self.xStored = []
         self.uStored = []
         self.MaxNumPoint = 7 # max number of point per lap to use 
-        self.h = 5 # bandwidth of the Kernel for local linear regression
-        self.lamb = 0.0 # regularization
+        self.h = 8.0 # bandwidth of the Kernel for local linear regression
+        self.lamb = 0.0000001 # regularization
         self.dt = 0.1
         self.scaling = np.array([[0.1, 0.0, 0.0, 0.0, 0.0],
                                 [0.0, 1.0, 0.0, 0.0, 0.0],
@@ -185,6 +185,8 @@ class PredictiveModel():
         diff  = np.dot(( DataMatrix - xVec ), self.scaling)
         norm = la.norm(diff, 1, axis=1)
         indexTot =  np.squeeze(np.where(norm < self.h))
+        if indexTot.shape == ():
+            indexTot = np.array([indexTot])
         if (indexTot.shape[0] >= self.MaxNumPoint):
             index = np.argsort(norm)[0:self.MaxNumPoint]
         else:

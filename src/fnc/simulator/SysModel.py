@@ -19,7 +19,7 @@ class Simulator():
         self.flagLMPC = flagLMPC
         self.dt = dt
 
-    def sim(self, x0,  Controller, maxSimTime = 100):
+    def sim(self, x0,  Controller, maxSimTime = 300):
         """Simulate closed-loop system
         """
         x_cl      = [x0[0]]
@@ -57,17 +57,25 @@ class Simulator():
         # This method computes the system evolution. Note that the discretization is deltaT and therefore is needed that
         # dt <= deltaT and ( dt / deltaT) = integer value
 
+        # friction
+        mu = 1.1
+
         # Vehicle Parameters
-        m  = 1.98
-        lf = 0.125
-        lr = 0.125
-        Iz = 0.024
-        Df = 0.8 * m * 9.81 / 2.0
-        Cf = 1.25
-        Bf = 1.0
-        Dr = 0.8 * m * 9.81 / 2.0
-        Cr = 1.25
-        Br = 1.0
+        m  = 1225.887
+        lf = 0.88392
+        lr = 1.50876
+        Iz = 1538.853371
+        Fzf = (m * 9.81) * (lr / (lf + lr))
+        Fzr = (m * 9.81) * (lf / (lf + lr)) 
+        ky1 = 21.92 # Lateral slip stiffness Kfy/Fz at Fznom
+        Cf = 1.3507
+        Df = mu * Fzf
+        Kf = Fzf * ky1
+        Bf = Kf / (Cf * Df)
+        Cr = 1.3507
+        Dr = mu * Fzr
+        Kr = Fzr * ky1
+        Br = Kr / (Cr * Dr)
 
         # Discretization Parameters
         deltaT = 0.001
