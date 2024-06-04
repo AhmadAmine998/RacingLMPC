@@ -42,7 +42,7 @@ def main():
     # ======================================================================================================================
     N = 14                                    # Horizon length
     n = 6;   d = 2                            # State and Input dimension
-    x0 = np.array([0.5, 0, 0, 0, 0, 0])       # Initial condition
+    x0 = np.array([1.5, 0, 0, 0, 0, 0])       # Initial condition
     xS = [x0, x0]
     dt = 0.1
 

@@ -1,6 +1,8 @@
 import numpy as np
 import numpy.linalg as la
 import pdb
+import matplotlib.pyplot as plt 
+from scipy.interpolate import CubicSpline
 
 class Map():
     """map object
@@ -39,6 +41,30 @@ class Map():
                          [lengthCurve / np.pi * 2, 0],
                          [lengthCurve / 2, lengthCurve / np.pi]])
 
+
+        # # Custom1 track
+        # spec = np.array([[1.0, 0],
+        #                  [lengthCurve, lengthCurve / np.pi],
+        #                  [lengthCurve, -lengthCurve / np.pi],
+        #                  # Note s = 1 * np.pi / 2 and r = -1 ---> Angle spanned = np.pi / 2
+        #                  [lengthCurve / 2, -lengthCurve / np.pi],
+        #                  [lengthCurve, lengthCurve / np.pi],
+        #                  [lengthCurve / np.pi * 2, 0],
+        #                  [lengthCurve / 2, lengthCurve / np.pi],
+        #                  [5.0, 0],
+        #                  [lengthCurve / 2, lengthCurve / np.pi],
+        #                  [5.725, 0],
+        #                  [lengthCurve / 2, lengthCurve / np.pi],])
+        
+        # # Custom2 track
+        # spec = np.array([[1.0, 0],
+        #                  [lengthCurve, lengthCurve / np.pi],
+        #                  [lengthCurve, -lengthCurve / np.pi],
+        #                  [lengthCurve, lengthCurve / np.pi],
+        #                  [5.0, 0],
+        #                  [lengthCurve, lengthCurve / np.pi],
+        #                  [lengthCurve, -lengthCurve / np.pi],
+        #                  [lengthCurve, lengthCurve / np.pi],])
 
         # spec = np.array([[1.0, 0],
         #                  [4.5, -4.5 / np.pi],
@@ -131,6 +157,71 @@ class Map():
 
         self.PointAndTangent = PointAndTangent
         self.TrackLength = PointAndTangent[-1, 3] + PointAndTangent[-1, 4]
+
+        # Points = int(np.floor(10 * (self.PointAndTangent[-1, 3] + self.PointAndTangent[-1, 4])))
+        # Points1 = np.zeros((Points, 2))
+        # Points2 = np.zeros((Points, 2))
+        # Points0 = np.zeros((Points, 2))
+        # for i in range(0, int(Points)):
+        #     Points1[i, :] = self.getGlobalPosition(i * 0.1, self.halfWidth)
+        #     Points2[i, :] = self.getGlobalPosition(i * 0.1, -self.halfWidth)
+        #     Points0[i, :] = self.getGlobalPosition(i * 0.1, 0)
+
+        # plt.figure()
+        # plt.plot(self.PointAndTangent[:, 0], self.PointAndTangent[:, 1], 'o')
+        # plt.plot(Points0[:, 0], Points0[:, 1], '--')
+        # plt.plot(Points1[:, 0], Points1[:, 1], '-b')
+        # plt.plot(Points2[:, 0], Points2[:, 1], '-b')
+        # plt.show()
+
+        # # Fit a cyclic spline throught Points0, resample and plot
+        # # s is the lengthscale of the spline, distance between points
+        # y = np.c_[Points0[:, 0], Points0[:, 1]]
+        # if np.linalg.norm(y[-1] - y[0]) > 0.001:
+        #     y = np.vstack((y, y[0]))
+        # s = np.cumsum(np.linalg.norm(np.diff(y, axis=0), axis=1))
+        # # Prepend 0 to s
+        # s = np.insert(s, 0, 0)
+            
+        # cs = CubicSpline(s, y, bc_type='periodic')
+        # xnew = np.arange(0, s[-1], 0.1)
+        # ynew = cs(xnew)
+
+        # # Now save the new interpolated centerline as #x_m, y_m, w_l, w_r
+        # data = np.zeros((len(xnew), 4))
+        # data[:, 0] = ynew[:, 0]
+        # data[:, 1] = ynew[:, 1]
+        # data[:, 2] = self.halfWidth
+        # data[:, 3] = self.halfWidth
+        # header = " x_m, y_m, w_tr_right_m, w_tr_left_m"
+        # np.savetxt('centerline.csv', data, header=header, delimiter=',', comments='#')
+
+        # # Now save the new interpolated centerline as # s_m; x_m; y_m; psi_rad; kappa_radpm; vx_mps; ax_mps2
+        # data = np.zeros((len(xnew), 7))
+        # velx = 4.0
+        # data[:, 0] = xnew
+        # data[:, 1] = ynew[:, 0]
+        # data[:, 2] = ynew[:, 1]
+        
+        # der = cs(s, 1)
+        # dx, dy = der[:, 0], der[:, 1]
+        # psi_rad = np.arctan2(dy, dx)
+
+        # # Convert psi_rad to be between 0 and 2pi
+        # psi_rad = np.mod(psi_rad, 2*np.pi)
+        # data[:, 3] = np.arctan2(np.gradient(ynew[:, 1], xnew), np.gradient(ynew[:, 0], xnew))
+        # # Kappa is curvature
+        # dder = cs(s, 2)
+        # ddx, ddy = dder[:, 0], dder[:, 1]
+        # k = (ddy * dx - ddx * dy) / ((dx**2 + dy**2) ** (3 / 2))
+
+        # if k.shape[0] == data.shape[0] + 1:
+        #     k = k[:-1]
+        # data[:, 4] = k
+        # data[:, 5] = velx * np.ones((len(xnew), ))
+        # data[:, 6] = 0.0
+        # header = " s_m; x_m; y_m; psi_rad; kappa_radpm; vx_mps; ax_mps2"
+        # np.savetxt('raceline.csv', data, header=header, delimiter=';', comments='#')
 
     def getGlobalPosition(self, s, ey):
         """coordinate transformation from curvilinear reference frame (e, ey) to inertial reference frame (X, Y)
