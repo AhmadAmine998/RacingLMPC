@@ -22,6 +22,7 @@ def plotTrajectory(map, x, x_glob, u, stringTitle):
     plt.plot(Points2[:, 0], Points2[:, 1], '-b')
     plt.plot(x_glob[:, 4], x_glob[:, 5], '-r')
     plt.title(stringTitle)
+    plt.savefig(stringTitle + '_TRAJ.png')
 
     plt.figure()
     plt.subplot(711)
@@ -46,6 +47,7 @@ def plotTrajectory(map, x, x_glob, u, stringTitle):
     plt.plot(x[:, 4], u[:, 1], '-o')
     plt.ylabel('acc')
     plt.title(stringTitle)
+    plt.savefig(stringTitle + '_STATES.png')
 
 def plotClosedLoopLMPC(lmpc, map):
     SS_glob = lmpc.SS_glob
@@ -72,7 +74,9 @@ def plotClosedLoopLMPC(lmpc, map):
     for i in range(TotNumberIt-5, TotNumberIt):
         plt.plot(SS_glob[i][0:LapTime[i], 4], SS_glob[i][0:LapTime[i], 5], '-r')
 
-    plt.figure()
+    plt.savefig('OPT_TRAJ.png')
+
+    plt.figure(figsize=(15, 10))
     plt.subplot(711)
     for i in range(2, TotNumberIt):
         plt.plot(SS[i][0:LapTime[i], 4], SS[i][0:LapTime[i], 0], '-o')
@@ -101,7 +105,10 @@ def plotClosedLoopLMPC(lmpc, map):
     for i in range(2, TotNumberIt):
         plt.plot(uSS[i][0:LapTime[i] - 1, 1], '-o')
     plt.ylabel('Acc')
+    plt.savefig('OPT_STATES.png')
 
+def save_lmpc_data(lmpc, filename):
+    np.savez(filename, SS_glob=lmpc.SS_glob, LapTime=lmpc.LapTime, SS=lmpc.SS, uSS=lmpc.uSS, Qfun=lmpc.Qfun)
 
 def animation_xy(map, lmpc, it):
     SS_glob = lmpc.SS_glob
@@ -119,7 +126,7 @@ def animation_xy(map, lmpc, it):
         Points2[i, :] = map.getGlobalPosition(i * 0.1, -map.halfWidth)
         Points0[i, :] = map.getGlobalPosition(i * 0.1, 0)
 
-    plt.figure(200)
+    plt.figure(figsize=(15, 10))
     plt.plot(map.PointAndTangent[:, 0], map.PointAndTangent[:, 1], 'o')
     plt.plot(Points0[:, 0], Points0[:, 1], '--')
     plt.plot(Points1[:, 0], Points1[:, 1], '-b')
@@ -188,10 +195,10 @@ def animation_states(map, lmpc, it):
     uSS = lmpc.uSS
 
     xdata = []; ydata = []
-    fig = plt.figure(100)
+    fig = plt.figure(figsize=(15, 10))
 
     axvx = fig.add_subplot(3, 2, 1)
-    plt.plot(SS[0:LapTime[it], 4, it], SS[0:LapTime[it], 0, it], '-ok', label="Closed-loop trajectory")
+    plt.plot(SS[it][:, 4], SS[it][:, 0], '-ok', label="Closed-loop trajectory")
     lineSSvx, = axvx.plot(xdata, ydata, 'sb-', label="SS")
     linevx, = axvx.plot(xdata, ydata, 'or-', label="Predicted Trajectory")
     plt.ylabel("vx")
@@ -201,37 +208,37 @@ def animation_states(map, lmpc, it):
                 mode="expand", borderaxespad=0, ncol=3)
 
     axvy = fig.add_subplot(3, 2, 2)
-    axvy.plot(SS[0:LapTime[it], 4, it], SS[0:LapTime[it], 1, it], '-ok')
+    axvy.plot(SS[it][:, 4], SS[it][:, 1], '-ok')
     lineSSvy, = axvy.plot(xdata, ydata, 'sb-')
     linevy, = axvy.plot(xdata, ydata, 'or-')
     plt.ylabel("vy")
     plt.xlabel("s")
 
     axwz = fig.add_subplot(3, 2, 3)
-    axwz.plot(SS[0:LapTime[it], 4, it], SS[0:LapTime[it], 2, it], '-ok')
+    axwz.plot(SS[it][:, 4], SS[it][:, 2], '-ok')
     lineSSwz, = axwz.plot(xdata, ydata, 'sb-')
     linewz, = axwz.plot(xdata, ydata, 'or-')
     plt.ylabel("wz")
     plt.xlabel("s")
 
     axepsi = fig.add_subplot(3, 2, 4)
-    axepsi.plot(SS[0:LapTime[it], 4, it], SS[0:LapTime[it], 3, it], '-ok')
+    axepsi.plot(SS[it][:, 4], SS[it][:, 3], '-ok')
     lineSSepsi, = axepsi.plot(xdata, ydata, 'sb-')
     lineepsi, = axepsi.plot(xdata, ydata, 'or-')
     plt.ylabel("epsi")
     plt.xlabel("s")
 
     axey = fig.add_subplot(3, 2, 5)
-    axey.plot(SS[0:LapTime[it], 4, it], SS[0:LapTime[it], 5, it], '-ok')
+    axey.plot(SS[it][:, 4], SS[it][:, 5], '-ok')
     lineSSey, = axey.plot(xdata, ydata, 'sb-')
     lineey, = axey.plot(xdata, ydata, 'or-')
     plt.ylabel("ey")
     plt.xlabel("s")
 
     Points = np.floor(10 * (map.PointAndTangent[-1, 3] + map.PointAndTangent[-1, 4]))
-    Points1 = np.zeros((Points, 2))
-    Points2 = np.zeros((Points, 2))
-    Points0 = np.zeros((Points, 2))
+    Points1 = np.zeros((int(Points), 2))
+    Points2 = np.zeros((int(Points), 2))
+    Points0 = np.zeros((int(Points), 2))
     for i in range(0, int(Points)):
         Points1[i, :] = map.getGlobalPosition(i * 0.1, map.halfWidth)
         Points2[i, :] = map.getGlobalPosition(i * 0.1, -map.halfWidth)
@@ -264,11 +271,11 @@ def animation_states(map, lmpc, it):
 
         epsiReal = xPred[0, 3]
 
-        lineSSvx.set_data(SSpoints[4,:], SSpoints[0,:])
-        lineSSvy.set_data(SSpoints[4,:], SSpoints[1,:])
-        lineSSwz.set_data(SSpoints[4,:], SSpoints[2,:])
-        lineSSepsi.set_data(SSpoints[4,:], SSpoints[3,:])
-        lineSSey.set_data(SSpoints[4,:], SSpoints[5,:])
+        lineSSvx.set_data(SSpoints[:, 4], SSpoints[:, 0])
+        lineSSvy.set_data(SSpoints[:, 4], SSpoints[:, 1])
+        lineSSwz.set_data(SSpoints[:, 4], SSpoints[:, 2])
+        lineSSepsi.set_data(SSpoints[:, 4], SSpoints[:, 3])
+        lineSSey.set_data(SSpoints[:, 4], SSpoints[:, 5])
 
         xPred = np.zeros((N + 1, 1));yPred = np.zeros((N + 1, 1))
         SSpoints_x = np.zeros((numSS_Points, 1));SSpoints_y = np.zeros((numSS_Points, 1))
@@ -277,12 +284,16 @@ def animation_states(map, lmpc, it):
             xPred[j, 0], yPred[j, 0] = map.getGlobalPosition(lmpc.xStoredPredTraj[it][i][j, 4],
                                                              lmpc.xStoredPredTraj[it][i][j, 5])
 
+        for j in range(0, numSS_Points):
+            SSpoints_x[j,0], SSpoints_y[j,0] = map.getGlobalPosition(lmpc.SSStoredPredTraj[it][i][j, 4],
+                                                                    lmpc.SSStoredPredTraj[it][i][j, 5])
+                
         line_tr.set_data(xPred, yPred)
 
 
-        vec = np.array([xPred[0, 0], yPred[0, 0]]) - np.array([SS_glob[i, 4, it], SS_glob[i, 5, it]])
+        vec = np.array([xPred[0, 0], yPred[0, 0]]) - np.array([SS_glob[it][i, 4], SS_glob[it][i, 5]])
 
-        s, ey, epsi, _ = map.getLocalPosition( SS_glob[i, 4, it], SS_glob[i, 5, it], SS_glob[i, 3, it])
+        s, ey, epsi, _ = map.getLocalPosition( SS_glob[it][i, 4], SS_glob[it][i, 5], SS_glob[it][i, 3])
         axtr.set_title(str(s)+" "+str(ey)+" "+str(epsi))
 
         # axepsi.set_title(str(epsiReal)+" "+str(epsi))
@@ -314,7 +325,12 @@ def saveGif_xyResults(map, lmpc, it):
     plt.plot(Points1[:, 0], Points1[:, 1], '-b')
     plt.plot(Points2[:, 0], Points2[:, 1], '-b')
     plt.plot(SS_glob[it][0:LapTime[it], 4], SS_glob[it][0:LapTime[it], 5], '-ok', label="Closed-loop trajectory", markersize=1,zorder=-1)
-
+    
+    # Center the frame around the track and set the aspect ratio to be equal
+    plt.xlim(np.min(Points2[:, 0]) - 5, np.max(Points2[:, 0]) + 5)
+    plt.ylim(np.min(Points2[:, 1]) - 5, np.max(Points2[:, 1]) + 5)
+    plt.gca().set_aspect('equal', adjustable='box')
+    
     ax = plt.axes()
     SSpoints_x = []; SSpoints_y = []
     xPred = []; yPred = []
@@ -330,8 +346,8 @@ def saveGif_xyResults(map, lmpc, it):
 
     plt.legend(mode="expand", ncol=3)
     plt.title('Lap: '+str(it))
-    # plt.legend(bbox_to_anchor=(0,1.02,1,0.2), loc="lower left",
-    #             mode="expand", borderaxespad=0, ncol=3)
+    plt.legend(bbox_to_anchor=(0,1.02,1,0.2), loc="lower left",
+                mode="expand", borderaxespad=0, ncol=3)
 
     N = lmpc.N
     numSS_Points = lmpc.numSS_Points
@@ -345,15 +361,19 @@ def saveGif_xyResults(map, lmpc, it):
                                                              lmpc.xStoredPredTraj[it][i][j, 5])
 
             if j == 0:
-                x = SS_glob[i, 4, it]
-                y = SS_glob[i, 5, it]
-                psi = SS_glob[i, 3, it]
-                l = 0.4;w = 0.2
+                x = SS_glob[it][i, 4]
+                y = SS_glob[it][i, 5]
+                psi = SS_glob[it][i, 3]
+                l = 4.298;w = 1.674
                 car_x = [x + l * np.cos(psi) - w * np.sin(psi), x + l * np.cos(psi) + w * np.sin(psi),
                          x - l * np.cos(psi) + w * np.sin(psi), x - l * np.cos(psi) - w * np.sin(psi)]
                 car_y = [y + l * np.sin(psi) + w * np.cos(psi), y + l * np.sin(psi) - w * np.cos(psi),
                          y - l * np.sin(psi) - w * np.cos(psi), y - l * np.sin(psi) + w * np.cos(psi)]
 
+            for j in range(0, numSS_Points):
+                SSpoints_x[j,0], SSpoints_y[j,0] = map.getGlobalPosition(lmpc.SSStoredPredTraj[it][i][j, 4],
+                                                                        lmpc.SSStoredPredTraj[it][i][j, 5])
+                
         SSpoints.set_data(SSpoints_x, SSpoints_y)
 
         line.set_data(xPred, yPred)

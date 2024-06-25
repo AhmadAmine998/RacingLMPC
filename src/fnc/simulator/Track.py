@@ -2,6 +2,7 @@ import numpy as np
 import numpy.linalg as la
 import pdb
 import matplotlib.pyplot as plt
+from scipy.interpolate import CubicSpline
 
 class Map():
     """map object
@@ -13,58 +14,70 @@ class Map():
         halfWidth: track halfWidth
         Modify the vector spec to change the geometry of the track
         """
+        plot = True
+        track_name = 'custom2'
+
         # Goggle-shaped track
-        # self.slack = 0.15
-        # self.halfWidth = halfWidth
-        # spec = np.array([[60 * 0.03, 0],
-        #                  [80 * 0.03, -80 * 0.03 * 2 / np.pi],
-        #                  # Note s = 1 * np.pi / 2 and r = -1 ---> Angle spanned = np.pi / 2
-        #                  [20 * 0.03, 0],
-        #                  [80 * 0.03, -80 * 0.03 * 2 / np.pi],
-        #                  [40 * 0.03, +40 * 0.03 * 10 / np.pi],
-        #                  [60 * 0.03, -60 * 0.03 * 5 / np.pi],
-        #                  [40 * 0.03, +40 * 0.03 * 10 / np.pi],
-        #                  [80 * 0.03, -80 * 0.03 * 2 / np.pi],
-        #                  [20 * 0.03, 0],
-        #                  [80 * 0.03, -80 * 0.03 * 2 / np.pi]])
+        if track_name == 'goggle':
+            self.slack = 0.15
+            self.halfWidth = halfWidth
+            spec = np.array([[60 * 0.3, 0],
+                            [80 * 0.3, -80 * 0.3 * 2 / np.pi],
+                            # Note s = 1 * np.pi / 2 and r = -1 ---> Angle spanned = np.pi / 2
+                            [20 * 0.3, 0],
+                            [80 * 0.3, -80 * 0.3 * 2 / np.pi],
+                            [40 * 0.3, +40 * 0.3 * 10 / np.pi],
+                            [60 * 0.3, -60 * 0.3 * 5 / np.pi],
+                            [40 * 0.3, +40 * 0.3 * 10 / np.pi],
+                            [80 * 0.3, -80 * 0.3 * 2 / np.pi],
+                            [20 * 0.3, 0],
+                            [80 * 0.3, -80 * 0.3 * 2 / np.pi]])
 
-        # L-shaped track
-        self.halfWidth = halfWidth
-        self.slack = 0.45
-        lengthCurve = 45
-        spec = np.array([[1.0, 0],
-                         [lengthCurve, lengthCurve / np.pi],
-                         # Note s = 1 * np.pi / 2 and r = -1 ---> Angle spanned = np.pi / 2
-                         [lengthCurve / 2, -lengthCurve / np.pi],
-                         [lengthCurve, lengthCurve / np.pi],
-                         [lengthCurve / np.pi * 2, 0],
-                         [lengthCurve / 2, lengthCurve / np.pi]])
+        elif track_name == 'l_shaped':
+            # L-shaped track
+            self.halfWidth = halfWidth
+            self.slack = 0.45
+            lengthCurve = 45
+            spec = np.array([[1.0, 0],
+                            [lengthCurve, lengthCurve / np.pi],
+                            # Note s = 1 * np.pi / 2 and r = -1 ---> Angle spanned = np.pi / 2
+                            [lengthCurve / 2, -lengthCurve / np.pi],
+                            [lengthCurve, lengthCurve / np.pi],
+                            [lengthCurve / np.pi * 2, 0],
+                            [lengthCurve / 2, lengthCurve / np.pi]])
 
-        # spec = np.array([[1.0, 0],
-        #                  [lengthCurve, lengthCurve / np.pi],
-        #                  [1.0, 0],
-        #                  # Note s = 1 * np.pi / 2 and r = -1 ---> Angle spanned = np.pi / 2
-        #                  [lengthCurve / np.pi * 2, 0],
-        #                  [lengthCurve / 2, lengthCurve / np.pi],
-        #                  [lengthCurve / 2, lengthCurve / np.pi]])
+
+        elif track_name == 'custom1':
+            # Custom1 track
+            self.halfWidth = halfWidth
+            self.slack = 0.45
+            lengthCurve = 45
+            spec = np.array([[1.0, 0],
+                            [lengthCurve, lengthCurve / np.pi],
+                            [lengthCurve, -lengthCurve / np.pi],
+                            # Note s = 1 * np.pi / 2 and r = -1 ---> Angle spanned = np.pi / 2
+                            [lengthCurve / 2, -lengthCurve / np.pi],
+                            [lengthCurve, lengthCurve / np.pi],
+                            [lengthCurve / np.pi * 2, 0],
+                            [lengthCurve / 2, lengthCurve / np.pi],
+                            [50, 0],
+                            [lengthCurve / 2, lengthCurve / np.pi],
+                            [57.25, 0],
+                            [lengthCurve / 2, lengthCurve / np.pi],])
         
-        # spec = np.array([[1.0, 0],
-        #                  [lengthCurve, lengthCurve / np.pi],
-        #                  # Note s = 1 * np.pi / 2 and r = -1 ---> Angle spanned = np.pi / 2
-        #                  [lengthCurve, -lengthCurve / np.pi],
-        #                  [lengthCurve, lengthCurve / np.pi],
-        #                  [lengthCurve / np.pi * 2, 0],
-        #                  [lengthCurve / 2, lengthCurve / np.pi],
-        #                  [57.5 , 0],
-        #                  [lengthCurve / 2, lengthCurve / np.pi],])
-
-
-        # spec = np.array([[1.0, 0],
-        #                  [4.5, -4.5 / np.pi],
-        #                  # Note s = 1 * np.pi / 2 and r = -1 ---> Angle spanned = np.pi / 2
-        #                  [2.0, 0],
-        #                  [4.5, -4.5 / np.pi],
-        #                  [1.0, 0]])
+        elif track_name == 'custom2':
+            self.halfWidth = halfWidth
+            self.slack = 0.45
+            lengthCurve = 45
+            # Custom2 track
+            spec = np.array([[10.0, 0],
+                            [lengthCurve, lengthCurve / np.pi],
+                            [lengthCurve, -lengthCurve / np.pi],
+                            [lengthCurve, lengthCurve / np.pi],
+                            [50.0, 0],
+                            [lengthCurve, lengthCurve / np.pi],
+                            [lengthCurve, -lengthCurve / np.pi],
+                            [lengthCurve, lengthCurve / np.pi],])
 
         # Now given the above segments we compute the (x, y) points of the track and the angle of the tangent vector (psi) at
         # these points. For each segment we compute the (x, y, psi) coordinate at the last point of the segment. Furthermore,
@@ -151,21 +164,100 @@ class Map():
         self.PointAndTangent = PointAndTangent
         self.TrackLength = PointAndTangent[-1, 3] + PointAndTangent[-1, 4]
 
-        # Points = int(np.floor(10 * (self.PointAndTangent[-1, 3] + self.PointAndTangent[-1, 4])))
-        # Points1 = np.zeros((Points, 2))
-        # Points2 = np.zeros((Points, 2))
-        # Points0 = np.zeros((Points, 2))
-        # for i in range(0, int(Points)):
-        #     Points1[i, :] = self.getGlobalPosition(i * 0.1, self.halfWidth)
-        #     Points2[i, :] = self.getGlobalPosition(i * 0.1, -self.halfWidth)
-        #     Points0[i, :] = self.getGlobalPosition(i * 0.1, 0)
+        Points = int(np.floor(10 * (self.PointAndTangent[-1, 3] + self.PointAndTangent[-1, 4])))
+        Points1 = np.zeros((Points, 2))
+        Points2 = np.zeros((Points, 2))
+        Points0 = np.zeros((Points, 2))
+        Points_curv = np.zeros((Points, 1))
+        for i in range(0, int(Points)):
+            Points1[i, :] = self.getGlobalPosition(i * 0.1, self.halfWidth)
+            Points2[i, :] = self.getGlobalPosition(i * 0.1, -self.halfWidth)
+            Points0[i, :] = self.getGlobalPosition(i * 0.1, 0)
+            Points_curv[i, :] = self.curvature(i * 0.1)
 
-        # plt.figure()
-        # plt.plot(self.PointAndTangent[:, 0], self.PointAndTangent[:, 1], 'o')
-        # plt.plot(Points0[:, 0], Points0[:, 1], '--')
-        # plt.plot(Points1[:, 0], Points1[:, 1], '-b')
-        # plt.plot(Points2[:, 0], Points2[:, 1], '-b')
-        # plt.show()
+        if plot:
+            plt.figure()
+            plt.scatter(Points0[:, 0], Points0[:, 1], c=Points_curv[:, 0], cmap='viridis', s=10)
+            plt.colorbar()
+            plt.plot(self.PointAndTangent[:, 0], self.PointAndTangent[:, 1], 'o')
+            # plt.plot(Points0[:, 0], Points0[:, 1], '--')
+            plt.plot(Points1[:, 0], Points1[:, 1], '-b')
+            plt.plot(Points2[:, 0], Points2[:, 1], '-b')
+            plt.show()
+            
+        # Fit a cyclic spline throught Points0, resample and plot
+        # s is the lengthscale of the spline, distance between points
+        y = np.c_[Points0[:, 0], Points0[:, 1]]
+        if np.linalg.norm(y[-1] - y[0]) > 0.001:
+            y = np.vstack((y, y[0]))
+        s = np.cumsum(np.linalg.norm(np.diff(y, axis=0), axis=1))
+        # Prepend 0 to s
+        s = np.insert(s, 0, 0)
+            
+        cs = CubicSpline(s, y, bc_type='periodic')
+        xnew = np.arange(0, s[-1], 0.1)
+        ynew = cs(xnew)
+
+        # Now save the new interpolated centerline as #x_m, y_m, w_l, w_r
+        data = np.zeros((len(xnew), 4))
+        data[:, 0] = ynew[:, 0]
+        data[:, 1] = ynew[:, 1]
+        data[:, 2] = self.halfWidth
+        data[:, 3] = self.halfWidth
+        header = " x_m, y_m, w_tr_right_m, w_tr_left_m"
+        np.savetxt('centerline.csv', data, header=header, delimiter=',', comments='#')
+
+        # Now save the new interpolated centerline as # s_m; x_m; y_m; psi_rad; kappa_radpm; vx_mps; ax_mps2
+        data = np.zeros((len(xnew), 7))
+        velx = 4.0
+        data[:, 0] = xnew
+        data[:, 1] = ynew[:, 0]
+        data[:, 2] = ynew[:, 1]
+        
+        der = cs(s, 1)
+        dx, dy = der[:, 0], der[:, 1]
+        psi_rad = np.arctan2(dy, dx)
+
+        # Convert psi_rad to be between 0 and 2pi
+        psi_rad = np.mod(psi_rad, 2*np.pi)
+        data[:, 3] = np.arctan2(np.gradient(ynew[:, 1], xnew), np.gradient(ynew[:, 0], xnew))
+        # Kappa is curvature
+        dder = cs(s, 2)
+        ddx, ddy = dder[:, 0], dder[:, 1]
+        k = (ddy * dx - ddx * dy) / ((dx**2 + dy**2) ** (3 / 2))
+
+        # Find kappa by fitting another spline to the ground-truth kappa (Points_curv) and resampling
+        kappa = Points_curv.flatten()
+        kappa = np.append(kappa, kappa[0])
+        
+        cs_kappa = CubicSpline(s, kappa, bc_type='periodic')
+        k = cs_kappa(xnew)
+
+        if k.shape[0] == data.shape[0] + 1:
+            k = k[:-1]
+        data[:, 4] = k
+        data[:, 5] = velx * np.ones((len(xnew), ))
+        data[:, 6] = 0.0
+
+        if plot:
+            # Comapre curvatures of ground truth and spline
+            plt.figure()
+            plt.scatter(Points0[:, 0], Points0[:, 1], c=Points_curv[:, 0], cmap='viridis', s=10)
+            plt.colorbar()
+            plt.title('Ground truth')
+            plt.figure()
+            plt.scatter(data[:, 1], data[:, 2], c=data[:, 4], cmap='viridis', s=10)
+            plt.colorbar()
+            plt.title('Spline')
+            plt.show()
+
+        header = " s_m; x_m; y_m; psi_rad; kappa_radpm; vx_mps; ax_mps2"
+        np.savetxt('raceline.csv', data, header=header, delimiter=';', comments='#')
+
+        # SAVE THE BOUNDARY POINTS AND THE CENTER LINE IN .npz FILE
+        np.savez(track_name + '_track_inner', Points1)
+        np.savez(track_name + '_track_outer', Points2)
+        np.savez(track_name + '_track_center', Points0)
 
 
     def getGlobalPosition(self, s, ey):
@@ -315,8 +407,8 @@ class Map():
                         if np.abs(ey) <= self.halfWidth + self.slack:
                             CompletedFlag = 1
 
-        if epsi>1.0:
-            pdb.set_trace()
+        # if epsi>1.0:
+        #     pdb.set_trace()
 
         if CompletedFlag == 0:
             s    = 10000
@@ -324,7 +416,6 @@ class Map():
             epsi = 10000
 
             print("Error!! POINT OUT OF THE TRACK!!!! <==================")
-            pdb.set_trace()
 
         return s, ey, epsi, CompletedFlag
 
@@ -335,6 +426,9 @@ class Map():
         """
         TrackLength = self.PointAndTangent[-1,3]+self.PointAndTangent[-1,4]
 
+        if s < 0:
+            s = s % TrackLength
+            
         # In case on a lap after the first one
         while (s > TrackLength):
             s = s - TrackLength

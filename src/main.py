@@ -25,10 +25,10 @@ sys.path.append('fnc/simulator')
 sys.path.append('fnc/controller')
 sys.path.append('fnc')
 import matplotlib.pyplot as plt
-from fnc.plot import plotTrajectory, plotClosedLoopLMPC, animation_xy, animation_states, saveGif_xyResults
+from fnc.plot import plotTrajectory, plotClosedLoopLMPC, animation_xy, animation_states, saveGif_xyResults, save_lmpc_data
 from initControllerParameters import initMPCParams, initLMPCParams
 from fnc.controller.PredictiveControllers import MPC, LMPC, MPCParams
-from fnc.controller.PredictiveModel import PredictiveModel
+from fnc.controller.PredictiveModel import PredictiveModel, LinearizedModel
 from fnc.Utilities import Regression, PID
 from fnc.simulator.SysModel import Simulator
 from fnc.simulator.Track import Map
@@ -36,6 +36,7 @@ import numpy as np
 import pickle
 import pdb
 from tqdm import trange
+import time
 
 def main():
     # ======================================================================================================================
@@ -43,12 +44,12 @@ def main():
     # ======================================================================================================================
     N = 14                                    # Horizon length
     n = 6;   d = 2                            # State and Input dimension
-    x0 = np.array([1.2, 0, 0, 0, 0, 0])       # Initial condition
+    x0 = np.array([5.0, 0, 0, 0, 0, 0])       # Initial condition
     xS = [x0, x0]
     dt = 0.1
 
     map = Map(4)                            # Initialize map
-    vt = 1.5                                  # target vevlocity
+    vt = 6.0                                  # target vevlocity
 
     # Initialize controller parameters
     mpcParam, ltvmpcParam = initMPCParams(n, d, N, vt)
@@ -82,25 +83,25 @@ def main():
     print("===== MPC terminated")
 
     # ======================================================================================================================
-    # ===================================  LOCAL LINEAR REGRESSION =========================================================
-    # ======================================================================================================================
-    print("Starting TV-MPC")
-    # Initialized predictive model
-    predictiveModel = PredictiveModel(n, d, map, 1)
-    predictiveModel.addTrajectory(xPID_cl,uPID_cl)
-    #Initialize TV-MPC
-    ltvmpcParam.timeVarying = True 
-    mpc = MPC(ltvmpcParam, predictiveModel)
-    # Run closed-loop sim
-    xTVMPC_cl, uTVMPC_cl, xTVMPC_cl_glob, _ = simulator.sim(xS, mpc)
-    print("===== TV-MPC terminated")
+    # # ===================================  LOCAL LINEAR REGRESSION =========================================================
+    # # ======================================================================================================================
+    # print("Starting TV-MPC")
+    # # Initialized predictive model
+    # predictiveModel = PredictiveModel(n, d, map, 1)
+    # predictiveModel.addTrajectory(xPID_cl,uPID_cl)
+    # #Initialize TV-MPC
+    # ltvmpcParam.timeVarying = True 
+    # mpc = MPC(ltvmpcParam, predictiveModel)
+    # # Run closed-loop sim
+    # xTVMPC_cl, uTVMPC_cl, xTVMPC_cl_glob, _ = simulator.sim(xS, mpc)
+    # print("===== TV-MPC terminated")
 
     # ======================================================================================================================
     # ==============================  LMPC w\ LOCAL LINEAR REGRESSION =======================================
     # ================
     print("Starting LMPC")
     # Initialize Predictive Model for lmpc
-    lmpcpredictiveModel = PredictiveModel(n, d, map, 4)
+    lmpcpredictiveModel = LinearizedModel(n, d, map, 4)
     for i in range(0,4): # add trajectories used for model learning
         lmpcpredictiveModel.addTrajectory(xPID_cl,uPID_cl)
 
@@ -135,6 +136,8 @@ def main():
     animation_xy(map, lmpc, Laps-1)
     plt.show()
 
+    save_lmpc_data(lmpc, 'lmpc_data_' + time.strftime("%Y%m%d-%H%M%S"))
+
     # animation_states(map, LMPCOpenLoopData, lmpc, Laps-2)
     # animation_states(map, LMPCOpenLoopData, lmpc, Laps-2)
     # animation_states(map, LMPCOpenLoopData, lmpc, Laps-2)
@@ -142,11 +145,11 @@ def main():
     saveGif_xyResults(map, lmpc, Laps-1)
 
 if __name__== "__main__":
-  while True:
-      try:
+#   while True:
+#       try:
         main()
-        break
-      except Exception as e:
-          print("=====================================================================")
-          print("Restarting after encountering Error: ", e)
-          continue
+    #     break
+    #   except Exception as e:
+    #       print("=====================================================================")
+    #       print("Restarting after encountering Error: ", e)
+    #       continue

@@ -1,7 +1,4 @@
 import numpy as np
-import pdb
-import datetime
-from Utilities import wrap
 
 class Simulator():
     """Vehicle simulator
@@ -19,7 +16,7 @@ class Simulator():
         self.flagLMPC = flagLMPC
         self.dt = dt
 
-    def sim(self, x0,  Controller, maxSimTime = 300):
+    def sim(self, x0,  Controller, maxSimTime = 350):
         """Simulate closed-loop system
         """
         x_cl      = [x0[0]]
@@ -108,21 +105,79 @@ class Simulator():
             Fyf = Df * np.sin( Cf * np.arctan(Bf * alpha_f ) )
             Fyr = Dr * np.sin( Cr * np.arctan(Br * alpha_r ) )
 
-            # Propagate the dynamics of deltaT
-            x_next[0] = vx  + deltaT * (a - 1 / m * Fyf * np.sin(delta) + wz*vy)
-            x_next[1] = vy  + deltaT * (1 / m * (Fyf * np.cos(delta) + Fyr) - wz * vx)
-            x_next[2] = wz  + deltaT * (1 / Iz *(lf * Fyf * np.cos(delta) - lr * Fyr) )
-            x_next[3] = psi + deltaT * (wz)
-            x_next[4] =   X + deltaT * ((vx * np.cos(psi) - vy * np.sin(psi)))
-            x_next[5] =   Y + deltaT * (vx * np.sin(psi)  + vy * np.cos(psi))
+            def f(state, u):
+                vx  = state[0]
+                vy  = state[1]
+                wz  = state[2]
+                psi = state[3]
+                X   = state[4]
+                Y   = state[5]
 
+                a = u[1]
+                delta = u[0]
+
+                return np.array([
+                                (a - 1 / m * Fyf * np.sin(delta) + wz * vy),
+                                (1 / m * (Fyf * np.cos(delta) + Fyr) - wz * vx),
+                                (1 / Iz *(lf * Fyf * np.cos(delta) - lr * Fyr) ),
+                                (wz),
+                                ((vx * np.cos(psi) - vy * np.sin(psi))),
+                                (vx * np.sin(psi)  + vy * np.cos(psi))
+                                ])
+                
+            def rk45_integrator(f, x, u, deltaT):
+                k1_state = x.copy()
+                k1 = f(k1_state, u)
+
+                k2_state = x + deltaT * (k1 / 2)
+                k2 = f(k2_state, u)
+
+                k3_state = x + deltaT * (k2 / 2)
+                k3 = f(k3_state, u)
+
+                k4_state = x + deltaT * k3
+                k4 = f(k4_state, u)
+
+                x_next = x + deltaT * (k1 + 2*k2 + 2*k3 + k4) / 6
+                return x_next
+            
+            # Propagate the dynamics of deltaT
+            # x_next[0] = vx  + deltaT * (a - 1 / m * Fyf * np.sin(delta) + wz*vy)
+            # x_next[1] = vy  + deltaT * (1 / m * (Fyf * np.cos(delta) + Fyr) - wz * vx)
+            # x_next[2] = wz  + deltaT * (1 / Iz *(lf * Fyf * np.cos(delta) - lr * Fyr) )
+            # x_next[3] = psi + deltaT * (wz)
+            # x_next[4] =   X + deltaT * ((vx * np.cos(psi) - vy * np.sin(psi)))
+            # x_next[5] =   Y + deltaT * (vx * np.sin(psi)  + vy * np.cos(psi))
+            x_next = rk45_integrator(f, np.array([vx, vy, wz, psi, X, Y]), u, deltaT)
+            
             cur = self.map.curvature(s)
-            cur_x_next[0] = vx   + deltaT * (a - 1 / m * Fyf * np.sin(delta) + wz*vy)
-            cur_x_next[1] = vy   + deltaT * (1 / m * (Fyf * np.cos(delta) + Fyr) - wz * vx)
-            cur_x_next[2] = wz   + deltaT * (1 / Iz *(lf * Fyf * np.cos(delta) - lr * Fyr) )
-            cur_x_next[3] = epsi + deltaT * ( wz - (vx * np.cos(epsi) - vy * np.sin(epsi)) / (1 - cur * ey) * cur )
-            cur_x_next[4] = s    + deltaT * ( (vx * np.cos(epsi) - vy * np.sin(epsi)) / (1 - cur * ey) )
-            cur_x_next[5] = ey   + deltaT * (vx * np.sin(epsi) + vy * np.cos(epsi))
+            def f_frenet(state, u):
+                vx   = state[0]
+                vy   = state[1]
+                wz   = state[2]
+                epsi = state[3]
+                s    = state[4]
+                ey   = state[5]
+
+                a = u[1]
+                delta = u[0]
+
+                return np.array([
+                                (a - 1 / m * Fyf * np.sin(delta) + wz * vy),
+                                (1 / m * (Fyf * np.cos(delta) + Fyr) - wz * vx),
+                                (1 / Iz *(lf * Fyf * np.cos(delta) - lr * Fyr) ),
+                                ( wz - (vx * np.cos(epsi) - vy * np.sin(epsi)) / (1 - cur * ey) * cur ),
+                                ( (vx * np.cos(epsi) - vy * np.sin(epsi)) / (1 - cur * ey) ),
+                                ( vx * np.sin(epsi) + vy * np.cos(epsi) )
+                                ])
+            
+            # cur_x_next[0] = vx   + deltaT * (a - 1 / m * Fyf * np.sin(delta) + wz*vy)
+            # cur_x_next[1] = vy   + deltaT * (1 / m * (Fyf * np.cos(delta) + Fyr) - wz * vx)
+            # cur_x_next[2] = wz   + deltaT * (1 / Iz *(lf * Fyf * np.cos(delta) - lr * Fyr) )
+            # cur_x_next[3] = epsi + deltaT * ( wz - (vx * np.cos(epsi) - vy * np.sin(epsi)) / (1 - cur * ey) * cur )
+            # cur_x_next[4] = s    + deltaT * ( (vx * np.cos(epsi) - vy * np.sin(epsi)) / (1 - cur * ey) )
+            # cur_x_next[5] = ey   + deltaT * (vx * np.sin(epsi) + vy * np.cos(epsi))
+            cur_x_next = rk45_integrator(f_frenet, np.array([vx, vy, wz, epsi, s, ey]), u, deltaT)
 
             # Update the value of the states
             psi  = x_next[3]
